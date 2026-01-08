@@ -17,3 +17,22 @@ Part one - Embeddings with ESM-2
     One vector per protein
         ↓
        Save
+
+
+
+
+
+
+
+
+---> TO COMPILE THE PROJECT RUN : 
+``` 
+    python3 setup.py build_ext --inplace 
+``` 
+
+You will need to setup pybind11 and 
+```
+pip install pybind11 setuptools wheel
+```
+
+It worked with Python 3.12.3  
