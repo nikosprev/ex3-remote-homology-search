@@ -3,7 +3,7 @@ Software project for algorithmic problems part 3 - Remote protein homology searc
 
 
 
-Part one - Embeddings with ESM-2
+Part 1 - Embeddings with ESM-2
 
     Conceptual pipeline (high level)
     FASTA file (protein sequences)
@@ -20,7 +20,20 @@ Part one - Embeddings with ESM-2
 
 
 
+Part 2 - BLAST
+        If not installed run:
+            conda install -c bioconda blast
 
+        Then run build_blast.py
+        BLAST provides:
+
+            A ranked list of similar proteins per query
+
+            Sequence identity percentages
+
+            A Top-N list used to evaluate ANN methods
+
+            Ground truth for Recall@N
 
 
 
