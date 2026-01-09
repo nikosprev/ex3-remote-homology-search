@@ -3,10 +3,10 @@ import os
 
 # Run once to set up BLAST database and perform BLASTP search
 
-QUERY_FASTA = "data/targets.fasta"
+INPUT = "data/swissprot.fasta"
 DB_PATH = "data/blast/swissprot_db"
 OUTPUT_TSV = "data/blast/blast_results.tsv"
-
+QUERY_FASTA = "data/targets.fasta"
 MAX_TARGETS = 200
 EVALUE = "1e-5"
 THREADS = "4"
@@ -20,7 +20,7 @@ os.makedirs("data/blast", exist_ok=True)
 # Build the command
 command = [
     "makeblastdb",
-    "-in", QUERY_FASTA,
+    "-in", INPUT,
     "-dbtype", "prot",
     "-out", DB_PATH
 ]

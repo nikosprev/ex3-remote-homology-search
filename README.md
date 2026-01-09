@@ -22,9 +22,9 @@ Part 1 - Embeddings with ESM-2
 
 Part 2 - BLAST
         If not installed run:
-            conda install -c bioconda blast
+            sudo apt install ncbi-blast+
 
-        Then run build_blast.py
+        Then run build_blast.py once to create the blast database
         BLAST provides:
 
             A ranked list of similar proteins per query
