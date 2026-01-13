@@ -1,1 +1,10 @@
-GEMINI.md
+# Python compiled files
+*.pyc
+__pycache__/
+
+# Build artifacts
+build/
+*.so
+*.o
+*.pyd
+G*.md
