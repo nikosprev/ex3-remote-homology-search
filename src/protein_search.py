@@ -3,6 +3,9 @@ import time
 import random
 import numpy as np
 from Algos import ann_algos
+import torch
+from scipy.spatial.distance import cdist
+from utils.load_model import load_model
 
 # -------------------------------
 # Utility Loaders
@@ -87,34 +90,82 @@ class IVFPQSearch:
 
 
 class NeuralSearch:
-    """
-    Brute-force neural KNN search.
-    Computes distances to all vectors and returns top-k neighbors.
-    """
-    def __init__(self, vectors, seed=42):
-        """
-        vectors: Dict[str, np.ndarray]
-        """
-        self.vectors = vectors
+    def __init__(self, vectors, model_path, device="cpu"):
         self.ids = list(vectors.keys())
-        self.vecs = list(vectors.values())
-        random.seed(seed)
+        self.vectors = np.vstack(list(vectors.values()))
+        self.device = device
+        self.model_path = model_path
+        input_dim = self.vectors.shape[1]
 
-    def query(self, query_vec, k=5, **kwargs):
+        # Infer num_classes from checkpoint OR use max block id later
+        # Safer: load once, build index, infer classes
+        checkpoint = torch.load(model_path, map_location=device)
+        if "architecture" in checkpoint:
+            num_classes = checkpoint["architecture"]["output_size"]
+        else:
+            # fallback: must match training
+            num_classes = 64  # <-- SAME m AS TRAINING
+
+        self.model = load_model(
+            model_path=self.model_path,
+        device=device
+        )
+
+        self.inverted_index = self._build_inverted_index()
+
+    def _build_inverted_index(self):
         """
-        query_vec: np.ndarray
-        k: number of neighbors to return
-        Returns a list of tuples (protein_id, distance)
+        Uses the trained NN to assign each database vector to a block.
         """
-        hits = []
-        for pid, vec in self.vectors.items():
-            dist = np.linalg.norm(query_vec - vec)
-            hits.append((pid, dist))
+        inverted = {}
 
-        # Sort by ascending distance
-        hits.sort(key=lambda x: x[1])
+        with torch.no_grad():
+            for idx, vec in enumerate(self.vectors):
+                v = torch.from_numpy(vec).float().unsqueeze(0).to(self.device)
+                logits = self.model(v)
+                block = torch.argmax(logits, dim=1).item()
 
-        return hits[:k]
+                if block not in inverted:
+                    inverted[block] = []
+                inverted[block].append(idx)
+
+        return inverted
+
+    def _predict_blocks(self, query_vec, probes=3):
+        q = torch.from_numpy(query_vec).float().unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            logits = self.model(q)
+            probs = torch.softmax(logits, dim=1)
+
+        return torch.topk(probs, probes).indices.cpu().numpy()[0]
+
+    def query(self, query_vec, k=5, probes=3, **kwargs):
+        blocks = self._predict_blocks(query_vec, probes)
+
+        candidate_ids = []
+        for b in blocks:
+            candidate_ids.extend(self.inverted_index.get(int(b), []))
+
+        if len(candidate_ids) == 0:
+            return []
+
+        candidate_ids = list(set(candidate_ids))
+        candidate_vecs = self.vectors[candidate_ids]
+
+        dists = cdist(
+            query_vec.reshape(1, -1),
+            candidate_vecs,
+            metric="euclidean"
+        )[0]
+
+        topk = np.argsort(dists)[:k]
+
+        return [
+            (self.ids[candidate_ids[i]], float(dists[i]))
+            for i in topk
+        ]
+
+
 
 
 # -------------------------------
@@ -155,7 +206,11 @@ def get_searcher(method, vectors, args):
             seed=args.seed
         )
     elif method == "neural":
-        return NeuralSearch(vectors, seed=args.seed)
+        return NeuralSearch(
+            vectors,
+            model_path=args.neural_model,
+            device="cpu"
+        )
     else:
         raise ValueError(f"Unknown method: {method}")
 
@@ -195,6 +250,8 @@ def main():
     parser.add_argument("--ivfpq_Ks", type=int, default=256)
     parser.add_argument("--ivfpq_iters", type=int, default=10)
     parser.add_argument("--ivfpq_nprobe", type=int, default=5)
+    # Neural parameters
+    parser.add_argument( "--neural_model",type=str,required=False,help="Path to trained neural NN model (.pth)")
 
     args = parser.parse_args()
 
