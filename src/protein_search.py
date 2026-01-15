@@ -1,6 +1,7 @@
 import argparse
 import time
 import random
+import os
 import numpy as np
 from Algos import ann_algos
 import torch
@@ -14,10 +15,44 @@ from utils.load_model import load_model
 def load_embeddings(npz_path):
     """
     Load protein embeddings from a .npz file as a dict {protein_id: vector}.
+    Supports two formats:
+    1. Dict format: {protein_id: vector} for each key
+    2. Array format: 'embeddings' (N, D) and 'ids' (N,) arrays
     """
     data = np.load(npz_path, allow_pickle=True)
-    embeddings = {k: data[k] for k in data}
-    return embeddings
+    
+    # Check if it's in the array format (embeddings + ids)
+    if 'embeddings' in data and 'ids' in data:
+        embeddings_array = data['embeddings']
+        ids_array = data['ids']
+        
+        # Handle both 1D and 2D embeddings arrays
+        if embeddings_array.ndim == 1:
+            # Single embedding vector
+            return {str(ids_array): embeddings_array}
+        else:
+            # Multiple embeddings: convert to dict format
+            embeddings = {}
+            for i, protein_id in enumerate(ids_array):
+                embeddings[str(protein_id)] = embeddings_array[i]
+            return embeddings
+    else:
+        # Dict format: assume each key is a protein_id with its embedding vector
+        # Filter out arrays that are clearly not embeddings (e.g., very large 1D arrays)
+        embeddings = {}
+        for k in data:
+            arr = data[k]
+            # Skip very large 1D arrays (likely metadata like IDs)
+            # Include reasonable-sized 1D arrays (embeddings) and 2D arrays
+            if arr.ndim == 1:
+                # Only include if it looks like an embedding vector (reasonable dimension)
+                if 64 <= arr.size <= 4096:
+                    embeddings[k] = arr
+            elif arr.ndim == 2:
+                # 2D array: each row is an embedding, use index as ID
+                for i, row in enumerate(arr):
+                    embeddings[f"{k}_{i}"] = row
+        return embeddings
 
 # -------------------------------
 # Search Wrappers
@@ -91,24 +126,39 @@ class IVFPQSearch:
 
 class NeuralSearch:
     def __init__(self, vectors, model_path, device="cpu"):
+        if model_path is None:
+            raise ValueError(
+                "model_path cannot be None. Please provide a path to the trained neural model (.pth file)."
+            )
+        
         self.ids = list(vectors.keys())
         self.vectors = np.vstack(list(vectors.values()))
         self.device = device
         self.model_path = model_path
-        input_dim = self.vectors.shape[1]
+        embedding_dim = self.vectors.shape[1]
 
-        # Infer num_classes from checkpoint OR use max block id later
-
+        # Check model architecture before loading
         checkpoint = torch.load(model_path, map_location=device)
-        if "architecture" in checkpoint:
-            num_classes = checkpoint["architecture"]["output_size"]
-        else:
-            # fallback: must match training
-            num_classes = 64  # <-- SAME m AS TRAINING
+        if "architecture" not in checkpoint:
+            raise ValueError(
+                f"Checkpoint at {model_path} is missing 'architecture' information. "
+                "Cannot determine expected input dimension."
+            )
+        
+        expected_input_dim = checkpoint["architecture"].get("input_size")
+        if expected_input_dim is None:
+            raise ValueError(
+                f"Checkpoint at {model_path} is missing 'input_size' in architecture. "
+                "Cannot determine expected input dimension."
+            )
+        
+     
+        
+        num_classes = checkpoint["architecture"]["output_size"]
 
         self.model = load_model(
             model_path=self.model_path,
-        device=device
+            device=device
         )
 
         self.inverted_index = self._build_inverted_index()
@@ -254,6 +304,22 @@ def main():
     parser.add_argument( "--neural_model",type=str,required=False,help="Path to trained neural NN model (.pth)")
 
     args = parser.parse_args()
+
+    # -------------------------------
+    # Validate neural method requirements
+    # -------------------------------
+    if args.method == "neural" or args.method == "all":
+        if args.neural_model is None:
+            # Try default path
+            default_model = "data/swissprot_model.pth"
+            if os.path.exists(default_model):
+                args.neural_model = default_model
+                print(f"Using default neural model: {default_model}")
+            else:
+                raise ValueError(
+                    "Neural method requires --neural_model argument. "
+                    f"Please specify the path to the trained model (.pth file)."
+                )
 
     # -------------------------------
     # Load data

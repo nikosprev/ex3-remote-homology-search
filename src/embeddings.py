@@ -75,13 +75,24 @@ def main():
     print(f"Found {len(proteins)} sequences")
 
     # Embed sequences
-    embeddings = {}
-    for protein_id, seq in tqdm(proteins, desc="Embedding proteins"):
-        embeddings[protein_id] = embed_sequence(seq)
+    ids = []
+    vectors = []
 
-    # Save embeddings to .npz
-    np.savez(output_npz, **embeddings)
-    print(f"Saved {len(embeddings)} embeddings to {output_npz}")
+    for protein_id, seq in tqdm(proteins, desc="Embedding proteins"):
+        vec = embed_sequence(seq)
+        ids.append(protein_id)
+        vectors.append(vec)
+
+    X = np.vstack(vectors)          # shape (N, D)
+    ids = np.array(ids)
+
+    np.savez(
+        output_npz,
+        embeddings=X,
+        ids=ids
+    )
+
+    print(f"Saved {len(ids)} embeddings to {output_npz}")
 
 # ---------------------------
 if __name__ == "__main__":
