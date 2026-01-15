@@ -98,7 +98,7 @@ class NeuralSearch:
         input_dim = self.vectors.shape[1]
 
         # Infer num_classes from checkpoint OR use max block id later
-        # Safer: load once, build index, infer classes
+
         checkpoint = torch.load(model_path, map_location=device)
         if "architecture" in checkpoint:
             num_classes = checkpoint["architecture"]["output_size"]
