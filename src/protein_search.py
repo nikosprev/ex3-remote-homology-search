@@ -135,38 +135,12 @@ class NeuralSearch:
         self.vectors = np.vstack(list(vectors.values()))
         self.device = device
         self.model_path = model_path
-        embedding_dim = self.vectors.shape[1]
 
-        # Check model architecture before loading
-        checkpoint = torch.load(model_path, map_location=device)
-        if "architecture" not in checkpoint:
-            raise ValueError(
-                f"Checkpoint at {model_path} is missing 'architecture' information. "
-                "Cannot determine expected input dimension."
-            )
-        
-        expected_input_dim = checkpoint["architecture"].get("input_size")
-        if expected_input_dim is None:
-            raise ValueError(
-                f"Checkpoint at {model_path} is missing 'input_size' in architecture. "
-                "Cannot determine expected input dimension."
-            )
-        
-     
-        
-        num_classes = checkpoint["architecture"]["output_size"]
-
-        self.model = load_model(
-            model_path=self.model_path,
-            device=device
-        )
+        self.model = load_model(model_path=self.model_path, device=device)
 
         self.inverted_index = self._build_inverted_index()
 
     def _build_inverted_index(self):
-        """
-        Uses the trained NN to assign each database vector to a block.
-        """
         inverted = {}
 
         with torch.no_grad():
@@ -214,9 +188,6 @@ class NeuralSearch:
             (self.ids[candidate_ids[i]], float(dists[i]))
             for i in topk
         ]
-
-
-
 
 # -------------------------------
 # Dispatcher
