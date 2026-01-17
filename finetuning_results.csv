@@ -1,0 +1,89 @@
+algorithm,recall,qps,avg_neighbor_distance,hypercube_M,hypercube_k_proj,hypercube_probe,ivf_nprobe,ivf_num_clusters,ivfpq_M,ivfpq_nprobe,ivfpq_num_clusters,lsh_num_tables,lsh_table_size,lsh_w
+lsh,0.6333,6.08,1.2316,,,,,,,,,2,1000,1.0
+lsh,0.8,3.79,1.2264,,,,,,,,,2,1000,2.0
+lsh,0.95,3.25,1.2244,,,,,,,,,2,1000,3.0
+lsh,0.9833,2.95,1.2243,,,,,,,,,2,1000,4.0
+lsh,0.9,3.54,1.2247,,,,,,,,,4,1000,1.0
+lsh,0.9667,3.08,1.2243,,,,,,,,,4,1000,2.0
+lsh,1.0,2.97,1.2242,,,,,,,,,4,1000,3.0
+lsh,1.0,2.95,1.2242,,,,,,,,,4,1000,4.0
+lsh,0.6333,5.92,1.2316,,,,,,,,,2,4000,1.0
+lsh,0.8,3.84,1.2264,,,,,,,,,2,4000,2.0
+lsh,0.95,3.25,1.2244,,,,,,,,,2,4000,3.0
+lsh,0.9833,3.01,1.2243,,,,,,,,,2,4000,4.0
+lsh,0.9,3.86,1.2247,,,,,,,,,4,4000,1.0
+lsh,0.9667,3.08,1.2243,,,,,,,,,4,4000,2.0
+lsh,1.0,2.98,1.2242,,,,,,,,,4,4000,3.0
+lsh,1.0,2.95,1.2242,,,,,,,,,4,4000,4.0
+lsh,0.6333,6.06,1.2316,,,,,,,,,2,10000,1.0
+lsh,0.8,3.87,1.2264,,,,,,,,,2,10000,2.0
+lsh,0.95,3.25,1.2244,,,,,,,,,2,10000,3.0
+lsh,0.9833,3.01,1.2243,,,,,,,,,2,10000,4.0
+lsh,0.9,3.68,1.2247,,,,,,,,,4,10000,1.0
+lsh,0.9667,3.09,1.2243,,,,,,,,,4,10000,2.0
+lsh,1.0,2.98,1.2242,,,,,,,,,4,10000,3.0
+lsh,1.0,2.93,1.2242,,,,,,,,,4,10000,4.0
+hypercube,0.0,599.91,1.338,10,2,1,,,,,,,,
+hypercube,0.0,509.64,1.338,10,2,2,,,,,,,,
+hypercube,0.0,292.5,1.3119,50,2,1,,,,,,,,
+hypercube,0.0,400.92,1.3119,50,2,2,,,,,,,,
+hypercube,0.0,422.75,1.3346,10,3,1,,,,,,,,
+hypercube,0.0,387.96,1.3346,10,3,2,,,,,,,,
+hypercube,0.0,368.45,1.3167,50,3,1,,,,,,,,
+hypercube,0.0,384.57,1.3167,50,3,2,,,,,,,,
+ivf,0.6667,16.01,1.2305,,,,2,16,,,,,,
+ivf,0.8333,6.52,1.2255,,,,5,16,,,,,,
+ivf,0.6333,22.34,1.2313,,,,2,32,,,,,,
+ivf,0.85,9.12,1.2264,,,,5,32,,,,,,
+ivfpq,0.0333,118.89,0.9275,,,,,,4,2,16,,,
+ivfpq,0.0333,77.02,0.9275,,,,,,4,5,16,,,
+ivfpq,0.0167,139.55,0.924,,,,,,4,2,32,,,
+ivfpq,0.0167,72.68,0.9239,,,,,,4,5,32,,,
+
+--- Tuning LSH ---
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 2, 'lsh_w': 1.0} ... Done (QPS: 6.1 | Recall: 63.33% | AvgDist: 1.2316)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 2, 'lsh_w': 2.0} ... Done (QPS: 3.8 | Recall: 80.00% | AvgDist: 1.2264)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 2, 'lsh_w': 3.0} ... Done (QPS: 3.3 | Recall: 95.00% | AvgDist: 1.2244)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 2, 'lsh_w': 4.0} ... Done (QPS: 3.0 | Recall: 98.33% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 4, 'lsh_w': 1.0} ... Done (QPS: 3.5 | Recall: 90.00% | AvgDist: 1.2247)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 4, 'lsh_w': 2.0} ... Done (QPS: 3.1 | Recall: 96.67% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 4, 'lsh_w': 3.0} ... Done (QPS: 3.0 | Recall: 100.00% | AvgDist: 1.2242)
+Running lsh {'lsh_table_size': 1000, 'lsh_num_tables': 4, 'lsh_w': 4.0} ... Done (QPS: 3.0 | Recall: 100.00% | AvgDist: 1.2242)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 2, 'lsh_w': 1.0} ... Done (QPS: 5.9 | Recall: 63.33% | AvgDist: 1.2316)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 2, 'lsh_w': 2.0} ... Done (QPS: 3.8 | Recall: 80.00% | AvgDist: 1.2264)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 2, 'lsh_w': 3.0} ... Done (QPS: 3.2 | Recall: 95.00% | AvgDist: 1.2244)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 2, 'lsh_w': 4.0} ... Done (QPS: 3.0 | Recall: 98.33% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 4, 'lsh_w': 1.0} ... Done (QPS: 3.9 | Recall: 90.00% | AvgDist: 1.2247)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 4, 'lsh_w': 2.0} ... Done (QPS: 3.1 | Recall: 96.67% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 4, 'lsh_w': 3.0} ... Done (QPS: 3.0 | Recall: 100.00% | AvgDist: 1.2242)
+Running lsh {'lsh_table_size': 4000, 'lsh_num_tables': 4, 'lsh_w': 4.0} ... Done (QPS: 3.0 | Recall: 100.00% | AvgDist: 1.2242)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 2, 'lsh_w': 1.0} ... Done (QPS: 6.1 | Recall: 63.33% | AvgDist: 1.2316)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 2, 'lsh_w': 2.0} ... Done (QPS: 3.9 | Recall: 80.00% | AvgDist: 1.2264)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 2, 'lsh_w': 3.0} ... Done (QPS: 3.2 | Recall: 95.00% | AvgDist: 1.2244)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 2, 'lsh_w': 4.0} ... Done (QPS: 3.0 | Recall: 98.33% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 4, 'lsh_w': 1.0} ... Done (QPS: 3.7 | Recall: 90.00% | AvgDist: 1.2247)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 4, 'lsh_w': 2.0} ... Done (QPS: 3.1 | Recall: 96.67% | AvgDist: 1.2243)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 4, 'lsh_w': 3.0} ... Done (QPS: 3.0 | Recall: 100.00% | AvgDist: 1.2242)
+Running lsh {'lsh_table_size': 10000, 'lsh_num_tables': 4, 'lsh_w': 4.0} ... Done (QPS: 2.9 | Recall: 100.00% | AvgDist: 1.2242)
+
+--- Tuning HYPERCUBE ---
+Running hypercube {'hypercube_k_proj': 2, 'hypercube_M': 10, 'hypercube_probe': 1} ... Done (QPS: 599.9 | Recall: 0.00% | AvgDist: 1.3380)
+Running hypercube {'hypercube_k_proj': 2, 'hypercube_M': 10, 'hypercube_probe': 2} ... Done (QPS: 509.6 | Recall: 0.00% | AvgDist: 1.3380)
+Running hypercube {'hypercube_k_proj': 2, 'hypercube_M': 50, 'hypercube_probe': 1} ... Done (QPS: 292.5 | Recall: 0.00% | AvgDist: 1.3119)
+Running hypercube {'hypercube_k_proj': 2, 'hypercube_M': 50, 'hypercube_probe': 2} ... Done (QPS: 400.9 | Recall: 0.00% | AvgDist: 1.3119)
+Running hypercube {'hypercube_k_proj': 3, 'hypercube_M': 10, 'hypercube_probe': 1} ... Done (QPS: 422.7 | Recall: 0.00% | AvgDist: 1.3346)
+Running hypercube {'hypercube_k_proj': 3, 'hypercube_M': 10, 'hypercube_probe': 2} ... Done (QPS: 388.0 | Recall: 0.00% | AvgDist: 1.3346)
+Running hypercube {'hypercube_k_proj': 3, 'hypercube_M': 50, 'hypercube_probe': 1} ... Done (QPS: 368.4 | Recall: 0.00% | AvgDist: 1.3167)
+Running hypercube {'hypercube_k_proj': 3, 'hypercube_M': 50, 'hypercube_probe': 2} ... Done (QPS: 384.6 | Recall: 0.00% | AvgDist: 1.3167)
+
+--- Tuning IVF ---
+Running ivf {'ivf_num_clusters': 16, 'ivf_nprobe': 2} ... Done (QPS: 16.0 | Recall: 66.67% | AvgDist: 1.2305)
+Running ivf {'ivf_num_clusters': 16, 'ivf_nprobe': 5} ... Done (QPS: 6.5 | Recall: 83.33% | AvgDist: 1.2255)
+Running ivf {'ivf_num_clusters': 32, 'ivf_nprobe': 2} ... Done (QPS: 22.3 | Recall: 63.33% | AvgDist: 1.2313)
+Running ivf {'ivf_num_clusters': 32, 'ivf_nprobe': 5} ... Done (QPS: 9.1 | Recall: 85.00% | AvgDist: 1.2264)
+
+--- Tuning IVFPQ ---
+Running ivfpq {'ivfpq_num_clusters': 16, 'ivfpq_M': 4, 'ivfpq_nprobe': 2} ... Done (QPS: 118.9 | Recall: 3.33% | AvgDist: 0.9275)
+Running ivfpq {'ivfpq_num_clusters': 16, 'ivfpq_M': 4, 'ivfpq_nprobe': 5} ... Done (QPS: 77.0 | Recall: 3.33% | AvgDist: 0.9275)
+Running ivfpq {'ivfpq_num_clusters': 32, 'ivfpq_M': 4, 'ivfpq_nprobe': 2} ... Done (QPS: 139.5 | Recall: 1.67% | AvgDist: 0.9240)
+Running ivfpq {'ivfpq_num_clusters': 32, 'ivfpq_M': 4, 'ivfpq_nprobe': 5} ... Done (QPS: 72.7 | Recall: 1.67% | AvgDist: 0.9239)
