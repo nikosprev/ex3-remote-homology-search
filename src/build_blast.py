@@ -3,7 +3,7 @@ import os
 
 # Run once to set up BLAST database and perform BLASTP search
 
-INPUT = "data/swissprot.fasta"
+INPUT = "data/swissprot_50k.fasta"
 DB_PATH = "data/blast/swissprot_db"
 OUTPUT_TSV = "data/blast/blast_results.tsv"
 QUERY_FASTA = "data/targets.fasta"
