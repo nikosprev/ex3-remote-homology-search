@@ -10,30 +10,22 @@ try:
     from Algos import ann_algos
     from utils.load_model import load_model
 except ImportError:
-    pass # Handle imports as per your setup
+    pass 
 
 BLAST_RESULTS_FILE = "data/blast/blast_results.tsv"
 
-# ---------------------------------------------------------
-# 1. FIXED: Handle Byte Strings & ID Formats
-# ---------------------------------------------------------
 def clean_id(id_obj):
     """
     1. Decodes numpy bytes to string (removes b'').
     2. Simplifies FASTA headers (e.g., 'sp|P12345|Name' -> 'P12345').
     """
-    # 1. Decode bytes if necessary
     if isinstance(id_obj, (bytes, np.bytes_)):
         id_str = id_obj.decode('utf-8')
     else:
         id_str = str(id_obj)
 
-    # 2. Clean common FASTA formats (optional, depends on your data)
-    # If your IDs look like "sp|A0A009I3Y5|DESC", split by pipes.
     if "|" in id_str:
         parts = id_str.split('|')
-        # Heuristic: usually the accession is the 2nd part in Uniprot (sp|ACC|NAME)
-        # Check if the parts are valid to decide
         if len(parts) >= 2:
             return parts[1] 
     
@@ -47,17 +39,13 @@ def load_embeddings(npz_path):
 
     data = np.load(npz_path, allow_pickle=True)
     
-    # --- DEBUG PRINT 1: Show exactly what keys are in the file ---
     keys_found = list(data.keys())
     print(f"   [DEBUG] Keys found in file: {keys_found}")
-    # -------------------------------------------------------------
 
-    # Check if 'ids' exists
     if 'embeddings' in data and 'ids' in data:
         embeddings_array = data['embeddings']
         ids_array = data['ids']
         
-        # --- DEBUG PRINT 2: Check ID format (bytes vs string) ---
         if len(ids_array) > 0:
             first_id = ids_array[0]
             print(f"   [DEBUG] First raw ID: {first_id} (Type: {type(first_id)})")
@@ -72,13 +60,10 @@ def load_embeddings(npz_path):
         return embeddings
         
     else:
-        # Fallback if keys are missing
         print(" -> Warning: 'ids' key not found in npz. Using index-based IDs.")
         
-        # --- DEBUG PRINT 3: Inspect shapes of found arrays ---
         for k in keys_found:
             print(f"   [DEBUG] Key '{k}' has shape: {data[k].shape}")
-        # -----------------------------------------------------
 
         embeddings = {}
         for k in data:
@@ -102,14 +87,9 @@ def parse_blast_results_local(filepath):
             if not line.strip(): continue
             parts = line.split('\t')
             if len(parts) < 3: continue
-
-            # BLAST often outputs raw accessions (e.g. A0A009I3Y5)
-            # Make sure to treat them as strings
             q_id = clean_id(parts[0].strip())
 
             
-            # The subject ID in your file is complex (sp|W7JX98|...)
-            # We need to clean it SAME WAY as we cleaned the database IDs
             s_id_raw = parts[1].strip()
             s_id = clean_id(s_id_raw) 
 
@@ -132,10 +112,6 @@ def get_bio_comment(is_in_blast, identity, distance):
         return "Remote Homolog"
     if distance < 0.2: return "Potential Novel"
     return "--"
-
-# ---------------------------------------------------------
-# 2. Search Classes (Unchanged logic, just utilizing new IDs)
-# ---------------------------------------------------------
 class LSHSearch:
     def __init__(self, vectors, args):
         self.ids = list(vectors.keys())
@@ -258,17 +234,14 @@ def main():
 
     args = parser.parse_args()
 
-    # 1. Load Data
     print("Loading Embeddings...")
     vectors = load_embeddings(args.database)
     queries = load_embeddings(args.query)
     vectors_neural = load_embeddings(args.neural_d)
     queries_neural = load_embeddings(args.neural_q)
-    # 2. Parse BLAST
     print("Parsing BLAST...")
     ground_truth_map = parse_blast_results_local(BLAST_RESULTS_FILE)
 
-    # 3. Build Searchers
     searchers = {}
     methods = ["lsh", "hypercube","ivf","ivfpq","neural"] if args.method == "all" else [args.method]
     for m in methods:
@@ -278,7 +251,6 @@ def main():
         except Exception as e:
             print(f"Skipping {m}: {e}")
 
-    # 4. Execute
     with open(args.output, "w", encoding="utf-8") as f:
      for q_id in queries.keys():
 
@@ -289,7 +261,6 @@ def main():
         f.write(f"Query Protein: {clean_q_id}\n")
         f.write(f"N = 50 (μέγεθος λίστας Top-N για την αξιολόγηση Recall@N)\n\n")
 
-        # [1] Summary
         f.write("[1] Συνοπτική σύγκριση μεθόδων\n")
         f.write("-" * 75 + "\n")
         f.write(f"{'Method':<20} | {'Time/query (s)':<15} | {'QPS':<10} | {'Recall@N'}\n")
@@ -301,7 +272,6 @@ def main():
             if m not in searchers:
                 continue
 
-            # 🔹 SELECT CORRECT QUERY VECTOR
             if m == "neural":
                 if q_id not in queries_neural:
                     continue 
@@ -327,7 +297,6 @@ def main():
         f.write(f"{'BLAST (Ref)':<20} | {'1.500':<15} | {'0.7':<10} | {'1.00'}\n")
         f.write("-" * 75 + "\n\n")
 
-        # [2] Details
         f.write("[2] Top-N γείτονες ανά μέθοδο\n")
         for m, neighbors in results_buffer.items():
             f.write(f"Method: {m}\n")

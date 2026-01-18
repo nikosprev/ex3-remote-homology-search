@@ -1,4 +1,15 @@
- # ex3-remote-homology-search
+# Running the Project 
+    sudo apt install ncbi-blast+
+    Then run build_blast.py once to create the blast database
+    pip install pybind11 setuptools
+    python setup.py build_ext
+    Then you should run the embeddings.py 
+    Then you can run the search_protein with the correct parameters 
+    
+
+
+
+# ex3-remote-homology-search
 
 Software project for algorithmic problems part 3 - Remote protein homology search
 
@@ -253,3 +264,9 @@ This script acts as a biological validator for the computational results. Its pr
     Comparative Analysis: It calculates the intersection of these terms between the query and the neighbor.
 
     Reporting: It generates a detailed human-readable report (detailed_bio_report.txt), automatically categorizing pairs as "Strong Homologs" (shared structure) or "Likely Homologs" (shared function), providing evidence for the embedding model's ability to find remote homology.
+
+
+
+
+
+

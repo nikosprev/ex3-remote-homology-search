@@ -1,0 +1,7 @@
+numpy
+scipy
+biopython
+torch
+transformers
+tqdm
+pybind11
