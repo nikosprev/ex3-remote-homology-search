@@ -217,12 +217,12 @@ class NeuralSearch:
         topk = np.argsort(dists)[:k]
         return [(self.ids[candidate_ids[i]], float(dists[i])) for i in topk]
 
-def get_searcher(method, vectors, args):
+def get_searcher(method, vectors, vectors_neural, args):
     if method == "lsh": return LSHSearch(vectors, args)
     elif method == "hypercube": return HypercubeSearch(vectors, args)
     elif method == "ivf": return IVFFlatSearch(vectors, args)
     elif method == "ivfpq": return IVFPQSearch(vectors, args)
-    elif method == "neural": return NeuralSearch(vectors, args)
+    elif method == "neural": return NeuralSearch(vectors_neural, args)
     else: raise ValueError(f"Unknown method: {method}")
 
 # ---------------------------------------------------------
@@ -253,13 +253,17 @@ def main():
     parser.add_argument("--ivfpq_iters", type=int, default=10)
     parser.add_argument("--ivfpq_nprobe", type=int, default=50)
     parser.add_argument("--neural_model", type=str, required=False, default="data/model.pth")
+    parser.add_argument("--neural_d",type=str, required=False, default="data/embeddings_modified.npz")
+    parser.add_argument("--neural_q",type=str, required=False, default="data/targets_modified.npz")
+
     args = parser.parse_args()
 
     # 1. Load Data
     print("Loading Embeddings...")
     vectors = load_embeddings(args.database)
     queries = load_embeddings(args.query)
-
+    vectors_neural = load_embeddings(args.neural_d)
+    queries_neural = load_embeddings(args.neural_q)
     # 2. Parse BLAST
     print("Parsing BLAST...")
     ground_truth_map = parse_blast_results_local(BLAST_RESULTS_FILE)
@@ -270,66 +274,83 @@ def main():
     for m in methods:
         try:
             print(f"Building {m}...")
-            searchers[m] = get_searcher(m, vectors, args)
+            searchers[m] = get_searcher(m, vectors, vectors_neural, args)
         except Exception as e:
             print(f"Skipping {m}: {e}")
 
     # 4. Execute
     with open(args.output, "w", encoding="utf-8") as f:
-        for q_id, q_vec in queries.items():
-            # The query ID might also need cleaning/matching
-            # If q_id in queries is "A0A009I3Y5", it's fine.
-            # If it is "sp|A0A009I3Y5|...", clean_id handles it.
-            print(f"qid: {q_id}")
-            clean_q_id = q_id
- 
-            print(f"clean_qid: {clean_q_id}")
-            gt_hits = ground_truth_map.get(clean_q_id, {})
-            gt_ids = set(gt_hits.keys())
+     for q_id in queries.keys():
 
-            f.write(f"Query Protein: {clean_q_id}\n")
-            f.write(f"N = 50 (μέγεθος λίστας Top-N για την αξιολόγηση Recall@N)\n\n")
-            
-            # [1] Summary
-            f.write("[1] Συνοπτική σύγκριση μεθόδων\n")
-            f.write("-" * 75 + "\n")
-            f.write(f"{'Method':<20} | {'Time/query (s)':<15} | {'QPS':<10} | {'Recall@N'}\n")
-            f.write("-" * 75 + "\n")
-            
-            results_buffer = {}
-            for m in methods:
-                if m not in searchers: continue
-                
-                t0 = time.time()
-                neighbors = searchers[m].query(q_vec, k=50)
-                dur = time.time() - t0
-                
-                # Calc Recall
-                # neighbors is [(id, dist), ...]
-                retrieved = set([n[0] for n in neighbors])
-                correct = retrieved.intersection(gt_ids)
-                recall = len(correct) / len(gt_ids) if gt_ids else 0.0
-                
-                f.write(f"{m:<20} | {dur:<15.4f} | {int(1/dur) if dur>0 else 0:<10} | {recall:.2f}\n")
-                results_buffer[m] = neighbors
-            
-            f.write(f"{'BLAST (Ref)':<20} | {'1.500':<15} | {'0.7':<10} | {'1.00'}\n")
-            f.write("-" * 75 + "\n\n")
+        clean_q_id = q_id
+        gt_hits = ground_truth_map.get(clean_q_id, {})
+        gt_ids = set(gt_hits.keys())
 
-            # [2] Details
-            f.write(f"[2] Top-N γείτονες ανά μέθοδο\n")
-            for m, neighbors in results_buffer.items():
-                f.write(f"Method: {m}\n")
-                f.write(f"{'Rank':<5} | {'Neighbor ID':<20} | {'Dist':<10} | {'Identity':<10} | {'In BLAST?'}\n")
-                f.write("-" * 80 + "\n")
-                for rank, (nid, dist) in enumerate(neighbors[:10], 1):
-                    in_blast = nid in gt_hits
-                    ident = gt_hits.get(nid, 0.0)
-                    ident_str = f"{int(ident)}%" if in_blast else "--"
-                    in_blast_str = "Yes" if in_blast else "No"
-                    f.write(f"{rank:<5} | {nid:<20} | {dist:<10.4f} | {ident_str:<10} | {in_blast_str}\n")
-                f.write("\n")
-            f.write("=" * 80 + "\n\n")
+        f.write(f"Query Protein: {clean_q_id}\n")
+        f.write(f"N = 50 (μέγεθος λίστας Top-N για την αξιολόγηση Recall@N)\n\n")
+
+        # [1] Summary
+        f.write("[1] Συνοπτική σύγκριση μεθόδων\n")
+        f.write("-" * 75 + "\n")
+        f.write(f"{'Method':<20} | {'Time/query (s)':<15} | {'QPS':<10} | {'Recall@N'}\n")
+        f.write("-" * 75 + "\n")
+
+        results_buffer = {}
+
+        for m in methods:
+            if m not in searchers:
+                continue
+
+            # 🔹 SELECT CORRECT QUERY VECTOR
+            if m == "neural":
+                if q_id not in queries_neural:
+                    continue 
+                query_vec = queries_neural[q_id]
+            else:
+                query_vec = queries[q_id]
+
+            t0 = time.time()
+            neighbors = searchers[m].query(query_vec, k=50)
+            dur = time.time() - t0
+
+            retrieved = {n[0] for n in neighbors}
+            correct = retrieved.intersection(gt_ids)
+            recall = len(correct) / len(gt_ids) if gt_ids else 0.0
+
+            f.write(
+                f"{m:<20} | {dur:<15.4f} | "
+                f"{int(1/dur) if dur > 0 else 0:<10} | {recall:.2f}\n"
+            )
+
+            results_buffer[m] = neighbors
+
+        f.write(f"{'BLAST (Ref)':<20} | {'1.500':<15} | {'0.7':<10} | {'1.00'}\n")
+        f.write("-" * 75 + "\n\n")
+
+        # [2] Details
+        f.write("[2] Top-N γείτονες ανά μέθοδο\n")
+        for m, neighbors in results_buffer.items():
+            f.write(f"Method: {m}\n")
+            f.write(
+                f"{'Rank':<5} | {'Neighbor ID':<20} | "
+                f"{'Dist':<10} | {'Identity':<10} | {'In BLAST?'}\n"
+            )
+            f.write("-" * 80 + "\n")
+
+            for rank, (nid, dist) in enumerate(neighbors[:10], 1):
+                in_blast = nid in gt_hits
+                ident = gt_hits.get(nid, 0.0)
+                ident_str = f"{int(ident)}%" if in_blast else "--"
+                in_blast_str = "Yes" if in_blast else "No"
+
+                f.write(
+                    f"{rank:<5} | {nid:<20} | {dist:<10.4f} | "
+                    f"{ident_str:<10} | {in_blast_str}\n"
+                )
+            f.write("\n")
+
+        f.write("=" * 80 + "\n\n")
+
 
 if __name__ == "__main__":
     main()
