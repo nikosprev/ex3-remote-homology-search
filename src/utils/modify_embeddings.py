@@ -58,21 +58,27 @@ def main():
     kmer_index = build_kmer_index(args.k)
 
     embeddings = np.zeros((len(records), len(kmer_index)), dtype=np.float32)
+    ids = []
 
     print("Computing embeddings...")
     for i, record in enumerate(tqdm(records)):
         seq = str(record.seq)
         vec = embed_sequence(seq, args.k, kmer_index)
         embeddings[i] = l2_normalize(vec)
+        ids.append(record.id)
+    
+    ids = np.array(ids)
 
     print("Saving embeddings...")
     np.savez_compressed(
         args.out,
-        embeddings=embeddings
+        embeddings=embeddings,
+        ids=ids
     )
 
-    print(f"Done ✅ saved {args.out}")
-    print("Shape:", embeddings.shape)
+    print(f"Done  saved {args.out}")
+    print(f"Saved {len(ids)} embeddings with protein IDs")
+    print("Embeddings shape:", embeddings.shape)
 
 
 if __name__ == "__main__":

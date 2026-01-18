@@ -105,7 +105,8 @@ def parse_blast_results_local(filepath):
 
             # BLAST often outputs raw accessions (e.g. A0A009I3Y5)
             # Make sure to treat them as strings
-            q_id = parts[0].strip()
+            q_id = clean_id(parts[0].strip())
+
             
             # The subject ID in your file is complex (sp|W7JX98|...)
             # We need to clean it SAME WAY as we cleaned the database IDs
@@ -251,7 +252,7 @@ def main():
     parser.add_argument("--ivfpq_Ks", type=int, default=256)
     parser.add_argument("--ivfpq_iters", type=int, default=10)
     parser.add_argument("--ivfpq_nprobe", type=int, default=50)
-    parser.add_argument("--neural_model", type=str, required=False)
+    parser.add_argument("--neural_model", type=str, required=False, default="data/model.pth")
     args = parser.parse_args()
 
     # 1. Load Data
@@ -265,7 +266,7 @@ def main():
 
     # 3. Build Searchers
     searchers = {}
-    methods = ["lsh", "hypercube", "ivf", "ivfpq", "neural"] if args.method == "all" else [args.method]
+    methods = ["lsh", "hypercube","ivf","ivfpq","neural"] if args.method == "all" else [args.method]
     for m in methods:
         try:
             print(f"Building {m}...")
@@ -280,7 +281,8 @@ def main():
             # If q_id in queries is "A0A009I3Y5", it's fine.
             # If it is "sp|A0A009I3Y5|...", clean_id handles it.
             print(f"qid: {q_id}")
-            clean_q_id = clean_id(q_id) 
+            clean_q_id = q_id
+ 
             print(f"clean_qid: {clean_q_id}")
             gt_hits = ground_truth_map.get(clean_q_id, {})
             gt_ids = set(gt_hits.keys())
